@@ -1,18 +1,22 @@
- install.packages('gam')
+install.packages('gam')
+install.packages('gamlss')
 library('gam')
+library('gamlss')
 require('gam')
 getwd()
 # use csv file in root dir of github
-oscars <- read.table(file.choose(), header=T, sep=",") #choose links
+oscars <- read.table(file.choose(), header=T, sep=",") #choose AA_4_computed
 summary(oscars)
-str(oscars)
+str(oscars[0])
 
 # convert T/F vals to binary
 oscars[3] = sapply(oscars[3], as.numeric) -1
 # convert string nums to num
 oscars[, c(8:11)] <- sapply(sapply(oscars[, c(8:11)], as.character), as.numeric)
-
+oscars[, c(6:11)] <- scale(oscars[, c(6:11)])
+oscars[, c(18)] <- scale(oscars[, c(18)])
 # split the data
+oscars
 splitindex = floor(nrow(oscars) * .1)
 test = oscars[1:splitindex,]
 train = oscars [splitindex:nrow(oscars),]
@@ -26,7 +30,12 @@ reportgam <- function(gamobj) {
   plot(wpreds, col='green')
   points(lpreds, col='red')
   print(summary(gamobj))
+  print(gamobj$coefficients)
 }
+
+# matching the human study first
+gamobj<-gam(Winner ~ + log(IMDB.Votes+1) + IMDB.Rating +  Average.Critic.Score + Average.Audience.Score  + Normalized.Gross + Normalized.Budget + Return.on.Investment,family=binomial,data=train)
+reportgam(gamobj)
 
  # minimum first
 gamobj<-gam(Winner ~ Producer + log(IMDB.Votes+1) + IMDB.Rating,family=binomial,data=train)
